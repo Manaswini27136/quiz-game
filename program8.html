@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Interactive Quiz Game</title>
+
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body{
+      background: linear-gradient(135deg,#4facfe,#00f2fe);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding:20px;
+    }
+
+    .quiz-container{
+      background:#fff;
+      width:100%;
+      max-width:700px;
+      padding:30px;
+      border-radius:20px;
+      box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    h1{
+      text-align:center;
+      margin-bottom:20px;
+      color:#333;
+    }
+
+    .question{
+      font-size:22px;
+      margin-bottom:20px;
+      color:#222;
+    }
+
+    .options{
+      margin-bottom:20px;
+    }
+
+    .option{
+      background:#f1f1f1;
+      padding:12px;
+      border-radius:10px;
+      margin-bottom:10px;
+      cursor:pointer;
+      transition:0.3s;
+    }
+
+    .option:hover{
+      background:#dbeafe;
+    }
+
+    input[type="text"]{
+      width:100%;
+      padding:12px;
+      border:2px solid #ccc;
+      border-radius:10px;
+      font-size:16px;
+      margin-bottom:20px;
+    }
+
+    button{
+      width:100%;
+      padding:14px;
+      border:none;
+      border-radius:12px;
+      background:#2563eb;
+      color:white;
+      font-size:18px;
+      cursor:pointer;
+      transition:0.3s;
+    }
+
+    button:hover{
+      background:#1d4ed8;
+    }
+
+    .result{
+      text-align:center;
+    }
+
+    .result h2{
+      margin-bottom:15px;
+      color:#111;
+    }
+
+    .score{
+      font-size:30px;
+      color:#2563eb;
+      margin-bottom:20px;
+    }
+
+    .hidden{
+      display:none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="quiz-container">
+
+    <h1>Interactive Quiz Game</h1>
+
+    <div id="quiz-box">
+      <div class="question" id="question"></div>
+
+      <div class="options" id="options"></div>
+
+      <div id="fillBlankBox" class="hidden">
+        <input type="text" id="fillInput" placeholder="Type your answer here">
+      </div>
+
+      <button id="nextBtn">Next Question</button>
+    </div>
+
+    <div class="result hidden" id="resultBox">
+      <h2>Quiz Completed 🎉</h2>
+      <div class="score" id="score"></div>
+      <button onclick="restartQuiz()">Restart Quiz</button>
+    </div>
+
+  </div>
+
+<script>
+
+const quizData = [
+
+  {
+    type: "single",
+    question: "Which language is used for web styling?",
+    options: ["HTML", "Python", "CSS", "Java"],
+    answer: "CSS"
+  },
+
+  {
+    type: "multi",
+    question: "Which of the following are programming languages?",
+    options: ["Python", "HTML", "JavaScript", "CSS"],
+    answer: ["Python", "JavaScript"]
+  },
+
+  {
+    type: "fill",
+    question: "Fill in the blank: HTML stands for ______ Markup Language.",
+    answer: "HyperText"
+  },
+
+  {
+    type: "single",
+    question: "Which company developed Java?",
+    options: ["Microsoft", "Sun Microsystems", "Google", "Apple"],
+    answer: "Sun Microsystems"
+  }
+
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const nextBtn = document.getElementById("nextBtn");
+const fillBlankBox = document.getElementById("fillBlankBox");
+const fillInput = document.getElementById("fillInput");
+
+function loadQuestion(){
+
+  optionsEl.innerHTML = "";
+  fillBlankBox.classList.add("hidden");
+
+  const current = quizData[currentQuestion];
+
+  questionEl.innerText = current.question;
+
+  if(current.type === "single"){
+
+    current.options.forEach(option => {
+
+      const div = document.createElement("div");
+      div.classList.add("option");
+
+      div.innerHTML = `
+        <label>
+          <input type="radio" name="answer" value="${option}">
+          ${option}
+        </label>
+      `;
+
+      optionsEl.appendChild(div);
+    });
+
+  }
+
+  else if(current.type === "multi"){
+
+    current.options.forEach(option => {
+
+      const div = document.createElement("div");
+      div.classList.add("option");
+
+      div.innerHTML = `
+        <label>
+          <input type="checkbox" name="answer" value="${option}">
+          ${option}
+        </label>
+      `;
+
+      optionsEl.appendChild(div);
+    });
+
+  }
+
+  else if(current.type === "fill"){
+
+    fillBlankBox.classList.remove("hidden");
+    fillInput.value = "";
+
+  }
+
+}
+
+function checkAnswer(){
+
+  const current = quizData[currentQuestion];
+
+  if(current.type === "single"){
+
+    const selected = document.querySelector('input[name="answer"]:checked');
+
+    if(selected && selected.value === current.answer){
+      score++;
+    }
+
+  }
+
+  else if(current.type === "multi"){
+
+    const selected = document.querySelectorAll('input[name="answer"]:checked');
+
+    let answers = [];
+
+    selected.forEach(item => {
+      answers.push(item.value);
+    });
+
+    answers.sort();
+    current.answer.sort();
+
+    if(JSON.stringify(answers) === JSON.stringify(current.answer)){
+      score++;
+    }
+
+  }
+
+  else if(current.type === "fill"){
+
+    const userAnswer = fillInput.value.trim().toLowerCase();
+
+    if(userAnswer === current.answer.toLowerCase()){
+      score++;
+    }
+
+  }
+
+}
+
+nextBtn.addEventListener("click", () => {
+
+  checkAnswer();
+
+  currentQuestion++;
+
+  if(currentQuestion < quizData.length){
+
+    loadQuestion();
+
+  } else {
+
+    showResult();
+
+  }
+
+});
+
+function showResult(){
+
+  document.getElementById("quiz-box").classList.add("hidden");
+  document.getElementById("resultBox").classList.remove("hidden");
+
+  document.getElementById("score").innerText =
+    `You scored ${score} out of ${quizData.length}`;
+
+}
+
+function restartQuiz(){
+
+  currentQuestion = 0;
+  score = 0;
+
+  document.getElementById("quiz-box").classList.remove("hidden");
+  document.getElementById("resultBox").classList.add("hidden");
+
+  loadQuestion();
+
+}
+
+loadQuestion();
+
+</script>
+
+</body>
+</html>
